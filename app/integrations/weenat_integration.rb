@@ -1,50 +1,32 @@
 class WeenatIntegration < ActionIntegration::Base
-  auth :check do
-    parameter :api_key
+  API_VERSION = 'v2'.freeze
+
+  auth :oauth do
+    parameter :access_token
   end
-  calls :fetch_all, :debug
+  calls :fetch_all
+
+  def self.oauth_url
+    "https://api.weenat.com/#{API_VERSION}/o/authorize/?client_id=#{ENV['WEENAT_CLIENT_ID']}&response_type=token"
+  end
 
   def fetch_all
     integration = fetch
-    get_json("http://sd-89062.dedibox.fr/Pieges/api/api_geojson.php?app_key=#{integration.parameters['api_key']}&id_rav=0&type_piege=captrap") do |r|
+    get_json('https://api.weenat.com/v2/weenats', 'Authorization' => "Bearer #{integration.parameters['access_token']}") do |r|
       r.success do
-        body = JSON(r.body)
-        body
-          .with_indifferent_access[:features] # Get list of traps
-          .map do |trap|
-            timezone_france = "Paris" # Datetimes they send us are France-based and without UTC notation.
-            last_transmission = trap[:properties][:dern_em]
-            last_transmission &&= last_transmission.to_datetime
-            last_transmission &&= Time.use_zone(timezone_france) { Time.zone.local_to_utc(last_transmission) }
-            last_transmission &&= last_transmission.in_time_zone timezone_france
-            {
-              id: trap[:properties][:id],
-              sigfox_id: trap[:properties][:id_sigfox],
-              number: trap[:properties][:num_piege],
-
-              pest_variety: trap[:properties][:ravageur],
-              total_count: trap[:comptage][:total_ravageur].to_i,
-              weekly_count: trap[:comptage][:comptage_sept_jours_connecte].to_i,
-              last_count: trap[:comptage][:comptage_nuit].to_i,
-
-              location: trap[:geometry],
-              battery_level: trap[:alerte][:dern_batt].present? && trap[:alerte][:dern_batt].to_f,
-              last_transmission: last_transmission,
-
-              alerts: {
-                battery_level: trap[:alerte][:alerte_batt].to_i,
-                connection_lost:  trap[:alerte][:alerte_emission].to_i,
-                pest_spike: trap[:alerte][:alerte_pic_vol].to_i,
-                danger_zone: trap[:alerte][:alerte_risque_zone].to_i,
-                weather: trap[:alerte][:alerte_meteo].to_i,
-
-                daily_pest_count: trap[:comptage][:alerte_comptage_nuit].to_i,
-                weekly_pest_count: trap[:comptage][:comptage_sept_jours_connecte].to_i
-              },
-
-              link: body["lien"]
-            }
-          end
+        list = JSON(r.body)
+        list.map do |sensor|
+          {
+            id: sensor[:id],
+            network_device_uid: sensor[:device],
+            name: sensor[:name],
+            location: { latitude: sensor[:latitude], longitude: sensor[:longitude] },
+            last_pick_at: sensor[:last_pick],
+            last_geolocation_pick_at: sensor[:last_pick_gps],
+            last_signal_power: sensor[:last_signal],
+            plot_url: sensor[:url_plot]
+          }
+        end
       end
 
       r.redirect do
@@ -57,9 +39,21 @@ class WeenatIntegration < ActionIntegration::Base
     end
   end
 
-  def debug
+  def last_value(sensor_id)
     integration = fetch
-    get_json("http://sd-89062.dedibox.fr/Pieges/api/api_geojson.php?app_key=#{integration.parameters['api_key']}&id_rav=0&type_piege=captrap") do |_r|
+    get_json("https://api.weenat.com/v2/weenats/#{sensor_id}/last_value/", 'Authorization' => "Bearer #{integration.parameters['access_token']}") do |r|
+      r.success do
+        object = JSON(r.body)
+        # TODO: Missing variable names
+      end
+
+      r.redirect do
+        Rails.logger.info '*sigh*'.yellow
+      end
+
+      r.error do
+        Rails.logger.info 'What the fuck brah?'.red
+      end
     end
   end
 
