@@ -1,0 +1,5 @@
+---
+cmn:
+  labels:
+    weenat_short_description: "地块传感器"
+    weenat_long_description: Weenat提供高精度传感器天气和土壤监测

@@ -1,0 +1,5 @@
+---
+jpn:
+  labels:
+    weenat_short_description: "土地区画センサ"
+    weenat_long_description: Weenatは気象や土壌のモニタリングのための高精度センサーを提供します

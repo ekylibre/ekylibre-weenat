@@ -1,0 +1,7 @@
+---
+spa:
+  labels:
+    weenat_short_description: Sensores de parcelas de terreno
+    weenat_long_description: Weenat proporciona sensores de precisión para el clima
+      y el suelo de vigilancia
+    weenat_url: Https://www.weenat.com

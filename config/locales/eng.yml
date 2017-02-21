@@ -1,0 +1,5 @@
+eng:
+  labels:
+    weenat_short_description: Land parcel sensors
+    weenat_long_description:  Weenat provides precision sensors for weather and soil monitoring
+    weenat_url: https://www.weenat.com
