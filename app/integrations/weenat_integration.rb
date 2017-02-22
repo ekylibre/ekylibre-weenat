@@ -6,8 +6,10 @@ class WeenatIntegration < ActionIntegration::Base
   end
   calls :fetch_all
 
-  def self.oauth_url
-    "https://api.weenat.com/#{API_VERSION}/o/authorize/?client_id=#{ENV['WEENAT_CLIENT_ID']}&response_type=token"
+  def self.oauth_callback_url(options = {})
+    url = "https://api.weenat.com/#{API_VERSION}/o/authorize/?client_id=#{ENV['WEENAT_OAUTH2_CLIENT_ID']}&response_type=token"
+    url << "&redirect_uri=https://ekylibre.com/callbacks/weenat/#{Ekylibre::Tenant.current}" #  if options[:base_uri]
+    url
   end
 
   def fetch_all

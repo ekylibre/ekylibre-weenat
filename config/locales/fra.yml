@@ -2,5 +2,6 @@
 fra:
   labels:
     weenat_short_description: Capteurs à la parcelle
-    weenat_long_description: Weenat fournit des capteurs de précision pour la météo et le sol
+    weenat_long_description: Weenat fournit des capteurs de précision pour la météo
+      et le sol
     weenat_url: https://www.weenat.com
