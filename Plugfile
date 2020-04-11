@@ -1,6 +1,5 @@
-author 'Brice Texier <brice@ekylibre.com>'
+author 'Brice Texier <brice@ekylibre.com>, David Joulin <david@ekylibre.com>'
 
 name 'weenat'
 version '0.0.1'
-app '>= 2.6.0'
-
+app '>= 3.0.0', '< 4.0.0'
