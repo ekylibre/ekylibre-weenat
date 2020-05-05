@@ -91,7 +91,7 @@ module Weenat
     end
 
     # Check if the API is up
-    # TODO where to store token ? 
+    # TODO where to store token ?
     def check(integration = nil)
       integration = fetch integration
       payload = {"username": integration.parameters['login'], "password": integration.parameters['password']}

@@ -1,10 +1,11 @@
 class WeenatFetchUpdateCreateJob < ActiveJob::Base
   queue_as :default
 
+  # get 2 hours of weather data every hour
   def perform
 
     # compute start and stop in EPOCH timestamp for weenat API
-    started_at = Time.now.to_i - 10.days
+    started_at = Time.now.to_i - 2.hours
     stopped_at = Time.now.to_i
 
     # transcode Weenat weather indicators in Ekylibre weather indicators
@@ -59,16 +60,14 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
                   geolocation: geolocation,
                   sampling_temporal_mode: :period
                 )
-                # Avoid multiples creations of the same items
-                analyse.items.destroy_all if analyse.items.any?
-
-                # Transcode each item present with transcode_indicators and save it
-                plot_analysis[1].each do |plot_analysis_item|
-                  puts plot_analysis_item.inspect.green
-                  transcoded_indicator = transcode_indicators[plot_analysis_item.first]
-                  puts transcoded_indicator.inspect.red
-                  if transcoded_indicator && plot_analysis_item.last != nil
-                    analyse.read!(transcoded_indicator[:indicator], plot_analysis_item.last.in(transcoded_indicator[:unit]))
+                # Avoid re creations of the same items if analyse exist with items
+                unless analyse.items.any?
+                  # Transcode each item present with transcode_indicators and save it
+                  plot_analysis[1].each do |plot_analysis_item|
+                    transcoded_indicator = transcode_indicators[plot_analysis_item.first]
+                    if transcoded_indicator && plot_analysis_item.last != nil
+                      analyse.read!(transcoded_indicator[:indicator], plot_analysis_item.last.in(transcoded_indicator[:unit]))
+                    end
                   end
                 end
 
