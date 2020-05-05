@@ -31,12 +31,13 @@ class WeenatFirstRunJob < ActiveJob::Base
 
           sensor = Sensor.find_or_create_by(
             vendor_euid: :weenat,
-            model_euid: :weenat,
             euid: plot[:id],
             retrieval_mode: :integration
           )
           sensor.update!(
-            name: "Weenat #{plot[:name]}",
+            name: "#{plot[:name]}",
+            model_euid: :weenat,
+            partner_url: "https://app.weenat.com",
             last_transmission_at: Time.now
           )
 
