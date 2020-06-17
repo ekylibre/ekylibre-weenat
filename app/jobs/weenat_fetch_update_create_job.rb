@@ -5,8 +5,7 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
   def perform
 
     # compute start and stop in EPOCH timestamp for weenat API
-    started_at = Time.now.to_i - 2.hours
-    stopped_at = Time.now.to_i
+    stopped_at = Time.zone.now.to_i
 
     # transcode Weenat weather indicators in Ekylibre weather indicators
     transcode_indicators = {
@@ -42,7 +41,7 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
             name: "#{plot[:name]}",
             model_euid: :weenat,
             partner_url: "https://app.weenat.com",
-            last_transmission_at: Time.now
+            last_transmission_at: Time.zone.now
           )
 
           # Get data for a plot (plot[:id]) and create analyse and items

@@ -38,13 +38,13 @@ class WeenatFirstRunJob < ActiveJob::Base
             name: "#{plot[:name]}",
             model_euid: :weenat,
             partner_url: "https://app.weenat.com",
-            last_transmission_at: Time.now
+            last_transmission_at: Time.zone.now
           )
 
           (0..10).each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
-            started_at = (Time.now.to_i - 10.days) - (i * 10.days)
-            stopped_at = Time.now.to_i - (i * 10.days)
+            started_at = (Time.zone.now.to_i - 10.days) - (i * 10.days)
+            stopped_at = Time.zone.now.to_i - (i * 10.days)
             # Get data for a plot (plot[:id]) and create analyse and items
             Weenat::WeenatIntegration.last_values(plot[:id], started_at, stopped_at).execute do |c|
               c.success do |values|
