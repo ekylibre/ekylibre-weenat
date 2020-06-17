@@ -1,10 +1,13 @@
 class WeenatFetchUpdateCreateJob < ActiveJob::Base
   queue_as :default
 
+  after_perform :update_preference
+
   # get 2 hours of weather data every hour
-  def perform
+  def perform(last_imported_at)
 
     # compute start and stop in EPOCH timestamp for weenat API
+    started_at = last_imported_at.to_i
     stopped_at = Time.zone.now.to_i
 
     # transcode Weenat weather indicators in Ekylibre weather indicators
@@ -78,4 +81,10 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
       end
     end
   end
+
+  private
+
+    def update_preference
+      Preference.find_by(name: 'weenat_import').touch
+    end
 end

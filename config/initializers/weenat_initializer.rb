@@ -5,5 +5,9 @@ Weenat::WeenatIntegration.on_check_success do
 end
 
 Weenat::WeenatIntegration.run every: :hour do
-  WeenatFetchUpdateCreateJob.perform_now
+  weenat_import_preference = Preference.find_by(name: 'weenat_import')
+  return unless weenat_import_preference&.value
+
+  last_imported_at = weenat_import_preference.updated_at
+  WeenatFetchUpdateCreateJob.perform_now(last_imported_at)
 end

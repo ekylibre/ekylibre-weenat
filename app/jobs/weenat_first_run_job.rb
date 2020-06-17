@@ -1,7 +1,10 @@
 class WeenatFirstRunJob < ActiveJob::Base
   queue_as :default
 
-  # get 150 days of weather data one time
+  before_perform :create_preference
+  after_perform :set_preference
+
+  # get 10 days of weather data one time
   def perform
 
     # transcode Weenat weather indicators in Ekylibre weather indicators
@@ -41,6 +44,7 @@ class WeenatFirstRunJob < ActiveJob::Base
             last_transmission_at: Time.zone.now
           )
 
+          # call 10 times 10 days because of Weenat api refuse more than 10 days.
           (0..10).each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
             started_at = (Time.zone.now.to_i - 10.days) - (i * 10.days)
@@ -81,4 +85,14 @@ class WeenatFirstRunJob < ActiveJob::Base
       end
     end
   end
+
+  private
+
+    def create_preference
+      Preference.set!('weenat_import', false, 'boolean')
+    end
+
+    def set_preference
+      Preference.set!('weenat_import', true)
+    end
 end
