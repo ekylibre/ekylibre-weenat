@@ -1,12 +1,10 @@
 class WeenatFirstRunJob < ActiveJob::Base
   queue_as :default
 
-  before_perform :create_preference
-  after_perform :set_preference
-
   # get 10 days of weather data one time
-  def perform
-
+  def perform(last_imported_at)
+    
+    last_sampled_at_list = []
     # transcode Weenat weather indicators in Ekylibre weather indicators
     transcode_indicators = {
                             :RR => {indicator: :cumulated_rainfall, unit: :millimeter},
@@ -17,7 +15,7 @@ class WeenatFirstRunJob < ActiveJob::Base
                           }.freeze
 
     #TODO call get_token method here to avoid multiple call of get_token during one session
-
+              
     # Get all plot and create sensor
     Weenat::WeenatIntegration.fetch_all.execute do |c|
       c.success do |list|
@@ -44,10 +42,16 @@ class WeenatFirstRunJob < ActiveJob::Base
             last_transmission_at: Time.zone.now
           )
 
+          n_request = if last_imported_at
+                        1
+                      else
+                        10
+                      end
+          
           # call 10 times 10 days because of Weenat api refuse more than 10 days.
-          (0..10).each do |i|
+          (0...n_request).each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
-            started_at = (Time.zone.now.to_i - 10.days) - (i * 10.days)
+            started_at = last_imported_at || (Time.zone.now.to_i - 10.days) - (i * 10.days)
             stopped_at = Time.zone.now.to_i - (i * 10.days)
             # Get data for a plot (plot[:id]) and create analyse and items
             Weenat::WeenatIntegration.last_values(plot[:id], started_at, stopped_at).execute do |c|
@@ -75,7 +79,9 @@ class WeenatFirstRunJob < ActiveJob::Base
                       end
                     end
                   end
-
+                end
+                if i.zero? && values.any?
+                  last_sampled_at_list << values.max_by { |k, _v| k }.first.to_s.to_i
                 end
               end
             end
@@ -84,15 +90,7 @@ class WeenatFirstRunJob < ActiveJob::Base
         end
       end
     end
+
+    Preference.set!('weenat_import', last_sampled_at_list.min, 'integer')
   end
-
-  private
-
-    def create_preference
-      Preference.set!('weenat_import', false, 'boolean')
-    end
-
-    def set_preference
-      Preference.set!('weenat_import', true)
-    end
 end
