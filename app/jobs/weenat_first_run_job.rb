@@ -1,10 +1,9 @@
 class WeenatFirstRunJob < ActiveJob::Base
   queue_as :default
 
-  # get 10 days of weather data one time
-  def perform(last_imported_at)
-    
-    last_sampled_at_list = []
+  # get 150 days of weather data one time
+  def perform
+
     # transcode Weenat weather indicators in Ekylibre weather indicators
     transcode_indicators = {
                             :RR => {indicator: :cumulated_rainfall, unit: :millimeter},
@@ -15,7 +14,7 @@ class WeenatFirstRunJob < ActiveJob::Base
                           }.freeze
 
     #TODO call get_token method here to avoid multiple call of get_token during one session
-              
+
     # Get all plot and create sensor
     Weenat::WeenatIntegration.fetch_all.execute do |c|
       c.success do |list|
@@ -42,17 +41,10 @@ class WeenatFirstRunJob < ActiveJob::Base
             last_transmission_at: Time.zone.now
           )
 
-          n_request = if last_imported_at
-                        1
-                      else
-                        10
-                      end
-          
-          # call 10 times 10 days because of Weenat api refuse more than 10 days.
-          (0...n_request).each do |i|
+          (0...10).to_a.reverse.each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
-            started_at = last_imported_at || (Time.zone.now.to_i - 10.days) - (i * 10.days)
-            stopped_at = Time.zone.now.to_i - (i * 10.days)
+            started_at = (Time.now.to_i - 10.days) - (i * 10.days)
+            stopped_at = Time.now.to_i - (i * 10.days)
             # Get data for a plot (plot[:id]) and create analyse and items
             Weenat::WeenatIntegration.last_values(plot[:id], started_at, stopped_at).execute do |c|
               c.success do |values|
@@ -85,12 +77,10 @@ class WeenatFirstRunJob < ActiveJob::Base
                 end
               end
             end
-
           end
         end
       end
     end
-
     Preference.set!('weenat_import', last_sampled_at_list.min, 'integer')
   end
 end
