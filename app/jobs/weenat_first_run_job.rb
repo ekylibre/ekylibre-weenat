@@ -41,6 +41,7 @@ class WeenatFirstRunJob < ActiveJob::Base
             last_transmission_at: Time.zone.now
           )
 
+          # call 10 times 10 days because of Weenat api refuse more than 10 days.
           (0...10).to_a.reverse.each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
             started_at = (Time.now.to_i - 10.days) - (i * 10.days)
