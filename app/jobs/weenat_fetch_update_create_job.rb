@@ -52,7 +52,7 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
           last_period_length = period % 10.days
 
           # call "periods_count" times 10 days because of Weenat api refuse more than 10 days.
-          (0...periods_count).to_a.reverse.each do |i|
+          (0..periods_count).to_a.reverse.each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
             started_at = time_now - last_period_length - (i * 10.days)
             stopped_at = time_now - ((i - 1) * 10.days) - (i.zero? ? 0 : last_period_length)
