@@ -1,7 +1,7 @@
 class WeenatFetchUpdateCreateJob < ActiveJob::Base
   queue_as :default
 
-  # get 2 hours of weather data every hour
+  # get all analyses since last import
   def perform(last_imported_at)
 
     # compute start and stop in EPOCH timestamp for weenat API
