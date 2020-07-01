@@ -45,8 +45,7 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
             partner_url: "https://app.weenat.com",
             last_transmission_at: Time.zone.now
           )
-
-
+  
           period = time_now - last_imported_at
           periods_count = period / 10.days
           last_period_length = period % 10.days
@@ -55,7 +54,7 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
           (0..periods_count).to_a.reverse.each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
             started_at = time_now - last_period_length - (i * 10.days)
-            stopped_at = time_now - ((i - 1) * 10.days) - (i.zero? ? 0 : last_period_length)
+            stopped_at = time_now - (i.zero? ? 0 : last_period_length + (i - 1) * 10.days)
 
             # Get data for a plot (plot[:id]) and create analyse and items
             Weenat::WeenatIntegration.last_values(plot[:id], started_at, stopped_at).execute do |c|
@@ -83,7 +82,6 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
                       end
                     end
                   end
-
                 end
                 if values.any?
                   last_sampled_at_list << values.max_by { |k, _v| k }.first.to_s.to_i
@@ -94,6 +92,6 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
         end
       end
     end
-    Preference.set!('weenat_import', last_sampled_at_list.min, 'integer')
+    Preference.set!('weenat_import', last_sampled_at_list.min || last_imported_at, 'integer')
   end
 end
