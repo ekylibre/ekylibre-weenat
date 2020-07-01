@@ -3,6 +3,7 @@ class WeenatFirstRunJob < ActiveJob::Base
 
   # get 150 days of weather data one time
   def perform
+    Preference.set!('weenat_import_running', true, 'boolean')
 
     # transcode Weenat weather indicators in Ekylibre weather indicators
     transcode_indicators = {
@@ -82,6 +83,7 @@ class WeenatFirstRunJob < ActiveJob::Base
         end
       end
     end
-    Preference.set!('weenat_import', last_sampled_at_list.min, 'integer')
+    Preference.set!('last_weenat_import', last_sampled_at_list.min, 'integer')
+    Preference.set!('weenat_import_running', false, 'boolean')
   end
 end

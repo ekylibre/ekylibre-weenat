@@ -3,6 +3,7 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
 
   # get all analyses since last import
   def perform(last_imported_at)
+    Preference.set!('weenat_import_running', true, 'boolean')
 
     # compute start and stop in EPOCH timestamp for weenat API
     time_now = Time.zone.now.to_i
@@ -92,6 +93,7 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
         end
       end
     end
-    Preference.set!('weenat_import', last_sampled_at_list.min || last_imported_at, 'integer')
+    Preference.set!('last_weenat_import', last_sampled_at_list.min || last_imported_at, 'integer')
+    Preference.set!('weenat_import_running', false, 'boolean')
   end
 end
