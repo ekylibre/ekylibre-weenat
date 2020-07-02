@@ -5,6 +5,8 @@ class WeenatFirstRunJob < ActiveJob::Base
   def perform
     Preference.set!('weenat_import_running', true, 'boolean')
 
+    last_sampled_at_list = []
+
     # transcode Weenat weather indicators in Ekylibre weather indicators
     transcode_indicators = {
                             :RR => {indicator: :cumulated_rainfall, unit: :millimeter},
