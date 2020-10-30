@@ -19,7 +19,7 @@ module Weenat
   class WeenatIntegration < ActionIntegration::Base
     # Set url needed for weenat API v2
     API_VERSION = '/v2'.freeze
-    BASE_URL = "https://api.weenat.com".freeze
+    BASE_URL = "https://api-phoenix.weenat.com".freeze
     TOKEN_URL = BASE_URL + "/api-token-auth/".freeze
     PLOTS_URL = BASE_URL + API_VERSION + "/access/plots/".freeze
 
@@ -33,7 +33,7 @@ module Weenat
     # Get token with login and password
     def get_token
       integration = fetch
-      payload = {"username": integration.parameters['login'], "password": integration.parameters['password']}
+      payload = { "email": integration.parameters['login'], "password": integration.parameters['password'] }
       post_json(TOKEN_URL, payload) do |r|
         r.success do
           list = JSON(r.body).deep_symbolize_keys
@@ -53,7 +53,7 @@ module Weenat
       # plots = JSON.parse(call.body).map{|p| p.deep_symbolize_keys}
 
       # Call API
-      get_json(PLOTS_URL, 'Authorization' => "Bearer #{token}") do |r|
+      get_json(PLOTS_URL, 'Authorization' => "JWT #{token}") do |r|
         r.success do
           list = JSON(r.body).map{|p| p.deep_symbolize_keys}
         end
