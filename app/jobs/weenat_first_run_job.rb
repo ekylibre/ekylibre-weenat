@@ -3,6 +3,9 @@ class WeenatFirstRunJob < ActiveJob::Base
 
   # get 150 days of weather data one time
   def perform
+    Preference.set!('weenat_import_running', true, 'boolean')
+
+    last_sampled_at_list = []
 
     # transcode Weenat weather indicators in Ekylibre weather indicators
     transcode_indicators = {
@@ -38,10 +41,11 @@ class WeenatFirstRunJob < ActiveJob::Base
             name: "#{plot[:name]}",
             model_euid: :weenat,
             partner_url: "https://app.weenat.com",
-            last_transmission_at: Time.now
+            last_transmission_at: Time.zone.now
           )
 
-          (0..10).each do |i|
+          # call 10 times 10 days because of Weenat api refuse more than 10 days.
+          (0...10).to_a.reverse.each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
             started_at = (Time.now.to_i - 10.days) - (i * 10.days)
             stopped_at = Time.now.to_i - (i * 10.days)
@@ -71,14 +75,17 @@ class WeenatFirstRunJob < ActiveJob::Base
                       end
                     end
                   end
-
+                end
+                if i.zero? && values.any?
+                  last_sampled_at_list << values.max_by { |k, _v| k }.first.to_s.to_i
                 end
               end
             end
-
           end
         end
       end
     end
+    Preference.set!('last_weenat_import', last_sampled_at_list.min, 'integer')
+    Preference.set!('weenat_import_running', false, 'boolean')
   end
 end
