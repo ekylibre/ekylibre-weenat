@@ -94,7 +94,7 @@ module Weenat
     # TODO where to store token ?
     def check(integration = nil)
       integration = fetch integration
-      payload = {"username": integration.parameters['login'], "password": integration.parameters['password']}
+      payload = { "email": integration.parameters['login'], "password": integration.parameters['password'] }
       post_json(TOKEN_URL, payload) do |r|
         r.success do
           Rails.logger.info 'CHECKED'.green
@@ -102,6 +102,5 @@ module Weenat
         end
       end
     end
-
   end
 end
