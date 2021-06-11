@@ -9,14 +9,14 @@ class WeenatFirstRunJob < ActiveJob::Base
 
     # transcode Weenat weather indicators in Ekylibre weather indicators
     transcode_indicators = {
-                            :RR => {indicator: :cumulated_rainfall, unit: :millimeter},
-                            :T => {indicator: :average_temperature, unit: :celsius},
-                            :U => {indicator: :average_relative_humidity, unit: :percent},
-                            :FF => {indicator: :average_wind_speed, unit: :kilometer_per_hour},
-                            :FXY => {indicator: :maximal_wind_speed, unit: :kilometer_per_hour}
+                            RR: { indicator: :cumulated_rainfall, unit: :millimeter },
+                            T: { indicator: :average_temperature, unit: :celsius },
+                            U: { indicator: :average_relative_humidity, unit: :percent },
+                            FF: { indicator: :average_wind_speed, unit: :kilometer_per_hour },
+                            FXY: { indicator: :maximal_wind_speed, unit: :kilometer_per_hour }
                           }.freeze
 
-    #TODO call get_token method here to avoid multiple call of get_token during one session
+    # TODO: call retrieve_token method here to avoid multiple call of retrieve_token during one session
 
     # Get all plot and create sensor
     Weenat::WeenatIntegration.fetch_all.execute do |c|
@@ -38,9 +38,9 @@ class WeenatFirstRunJob < ActiveJob::Base
             retrieval_mode: :integration
           )
           sensor.update!(
-            name: "#{plot[:name]}",
+            name: (plot[:name]).to_s,
             model_euid: :weenat,
-            partner_url: "https://app.weenat.com",
+            partner_url: 'https://app.weenat.com',
             last_transmission_at: Time.zone.now
           )
 
@@ -53,7 +53,7 @@ class WeenatFirstRunJob < ActiveJob::Base
             Weenat::WeenatIntegration.last_values(plot[:id], started_at, stopped_at).execute do |c|
               c.success do |values|
                 values.each do |plot_analysis|
-                  reference_number = sensor.euid.to_s + "_" + plot_analysis[0].to_s
+                  reference_number = sensor.euid.to_s + '_' + plot_analysis[0].to_s
                   read_at = Time.at(plot_analysis[0].to_s.to_i)
 
                   analyse = sensor.analyses.find_or_create_by(
