@@ -19,21 +19,21 @@ module Weenat
   class WeenatIntegration < ActionIntegration::Base
     # Set url needed for weenat API v2
     API_VERSION = '/v2'.freeze
-    BASE_URL = "https://api-phoenix.weenat.com".freeze
-    TOKEN_URL = BASE_URL + "/api-token-auth/".freeze
-    PLOTS_URL = BASE_URL + API_VERSION + "/access/plots/".freeze
+    BASE_URL = 'https://api-phoenix.weenat.com'.freeze
+    TOKEN_URL = BASE_URL + '/api-token-auth/'.freeze
+    PLOTS_URL = BASE_URL + API_VERSION + '/access/plots/'.freeze
 
     authenticate_with :check do
       parameter :login
       parameter :password
     end
 
-    calls :get_token, :fetch_all, :last_values
+    calls :retrieve_token, :fetch_all, :last_values
 
     # Get token with login and password
-    def get_token
+    def retrieve_token
       integration = fetch
-      payload = { "email": integration.parameters['login'], "password": integration.parameters['password'] }
+      payload = { email: integration.parameters['login'], password: integration.parameters['password'] }
       post_json(TOKEN_URL, payload) do |r|
         r.success do
           list = JSON(r.body).deep_symbolize_keys
@@ -46,7 +46,7 @@ module Weenat
     def fetch_all
       integration = fetch
       # Grab token
-      token = JSON(get_token.body).deep_symbolize_keys[:token]
+      token = JSON(retrieve_token.body).deep_symbolize_keys[:token]
 
       # for testing
       # call = RestClient::Request.execute(method: :get, url: PLOTS_URL, headers: {Authorization: "Bearer #{t}"})
@@ -55,7 +55,7 @@ module Weenat
       # Call API
       get_json(PLOTS_URL, 'Authorization' => "JWT #{token}") do |r|
         r.success do
-          list = JSON(r.body).map{|p| p.deep_symbolize_keys}
+          list = JSON(r.body).map(&:deep_symbolize_keys)
         end
 
         r.redirect do
@@ -72,7 +72,7 @@ module Weenat
     def last_values(plot_id, started_at, stopped_at)
       integration = fetch
       # Grab token
-      token = JSON(get_token.body).deep_symbolize_keys[:token]
+      token = JSON(retrieve_token.body).deep_symbolize_keys[:token]
 
       # Call API
       get_json("#{PLOTS_URL}#{plot_id}/measures/?start=#{started_at}&end=#{stopped_at}", 'Authorization' => "Bearer #{token}") do |r|
@@ -94,7 +94,7 @@ module Weenat
     # TODO where to store token ?
     def check(integration = nil)
       integration = fetch integration
-      payload = { "email": integration.parameters['login'], "password": integration.parameters['password'] }
+      payload = { email: integration.parameters['login'], password: integration.parameters['password'] }
       post_json(TOKEN_URL, payload) do |r|
         r.success do
           Rails.logger.info 'CHECKED'.green
