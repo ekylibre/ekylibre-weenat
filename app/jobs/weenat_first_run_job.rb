@@ -55,16 +55,18 @@ class WeenatFirstRunJob < ActiveJob::Base
                 values.each do |plot_analysis|
                   reference_number = sensor.euid.to_s + '_' + plot_analysis[0].to_s
                   read_at = Time.at(plot_analysis[0].to_s.to_i)
-
-                  analyse = sensor.analyses.find_or_create_by(
+                  analyse = sensor.analyses.find_or_initialize_by(
                     reference_number: reference_number,
                     sampled_at: read_at,
                     analysed_at: read_at,
                     retrieval_status: :ok,
                     nature: :sensor_analysis,
-                    geolocation: geolocation,
                     sampling_temporal_mode: :period
                   )
+                  if analyse.new_record?
+                    analyse.geolocation = geolocation
+                    analyse.save!
+                  end
                   # Avoid re creations of the same items if analyse exist with items
                   unless analyse.items.any?
                     # Transcode each item present with transcode_indicators and save it
