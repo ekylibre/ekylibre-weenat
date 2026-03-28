@@ -6,6 +6,7 @@ class WeenatFirstRunJob < ActiveJob::Base
     Preference.set!('weenat_import_running', true, 'boolean')
 
     last_sampled_at_list = []
+    period_length = 30.days
 
     # transcode Weenat weather indicators in Ekylibre weather indicators
     transcode_indicators = {
@@ -47,8 +48,8 @@ class WeenatFirstRunJob < ActiveJob::Base
           # call 10 times 10 days because of Weenat api refuse more than 10 days.
           (0...10).to_a.reverse.each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
-            started_at = (Time.now.to_i - 10.days) - (i * 10.days)
-            stopped_at = Time.now.to_i - (i * 10.days)
+            started_at = (Time.now.to_i - period_length) - (i * period_length)
+            stopped_at = Time.now.to_i - (i * period_length)
             # Get data for a plot (plot[:id]) and create analyse and items
             Weenat::WeenatIntegration.last_values(plot[:id], started_at, stopped_at).execute do |c|
               c.success do |values|

@@ -2,7 +2,9 @@
 
 Plugin to allow integration of the data returned by Weenat into Ekylibre analysis.
 
-Bases on Weenat API v2.
+Bases on Weenat API v2
+
+https://dev.weenat.com/
 
 Initialize connection with all data present on Weenat (when connexion set)
 

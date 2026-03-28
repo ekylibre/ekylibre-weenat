@@ -7,6 +7,7 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
 
     # compute start and stop in EPOCH timestamp for weenat API
     time_now = Time.zone.now.to_i
+    period_length = 30.days
 
     last_sampled_at_list = []
 
@@ -48,14 +49,14 @@ class WeenatFetchUpdateCreateJob < ActiveJob::Base
           )
 
           period = time_now - last_imported_at
-          periods_count = period / 10.days
-          last_period_length = period % 10.days
+          periods_count = period / period_length
+          last_period_length = period % period_length
 
-          # call "periods_count" times 10 days because of Weenat api refuse more than 10 days.
+          # call "periods_count" times 30 days because of Weenat api refuse more than 35 days.
           (0..periods_count).to_a.reverse.each do |i|
             # compute start and stop in EPOCH timestamp for weenat API
-            started_at = time_now - last_period_length - (i * 10.days)
-            stopped_at = time_now - (i.zero? ? 0 : last_period_length + (i - 1) * 10.days)
+            started_at = time_now - last_period_length - (i * period_length)
+            stopped_at = time_now - (i.zero? ? 0 : last_period_length + (i - 1) * period_length)
 
             # Get data for a plot (plot[:id]) and create analyse and items
             Weenat::WeenatIntegration.last_values(plot[:id], started_at, stopped_at).execute do |c|
